@@ -30,9 +30,9 @@ K=[4*EI/L^3   0  ;
    0        GJ/L];
 %echo off
 % FREQUENCIES AND MODES OF WING+STORE FROM SYSTEM EIGENVALUES AND EIGENVECTORS
-[V,LAMBDA] = eig(K,(Mw+Mi))
+[V,LAMBDA] = eig(K,(Mw+Mi)) ;
 omega = sqrt(diag(LAMBDA));     % rad/s frequency
-f = omega/(2*pi)                % hertz frequency
+f = omega/(2*pi) ;              % hertz frequency
 % echo off
 % First two natural frequencies, Rayleigh-Ritz method, [Hz]:
 % First mode=2.181 Hz

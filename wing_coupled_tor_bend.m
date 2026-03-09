@@ -155,7 +155,7 @@ end
     figure;
     hold on;
     grid on;
-    view(-35, 300 ;                  % Sets the 3D viewing angle to match your reference image
+    view(-35, 300) ;                  % Sets the 3D viewing angle to match your reference image
     
     % rigid wing 
     plot3([Lead_x Lead_x], [0 L], [0 0], '--k');                    % Leading Edge
