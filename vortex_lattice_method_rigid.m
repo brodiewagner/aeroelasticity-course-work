@@ -93,6 +93,7 @@ Li = rho*Vinf*gamma.*DY*L ;     % calculate local lift
 Ltot = sum(Li) ;                % total lift
 Cltot = Ltot/(qinf*S) ;         % wing lift coefficient
 Cla = Cltot/alpha ;             % Compute Lift-slope
+fprintf('Lift curve slope, CLa = %.2f', Cla) ;
 
 % calculate local lift coefficients
 for i = 1:NP

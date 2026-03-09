@@ -38,7 +38,7 @@ dy = DY_s*L ;                       % physical panel span (m)
 S = trapz(c_Y)*dy*2 ;               % wing reference area (trapz, both wings)
 AR = (2*L)^2/S ;                    % aspect ratio
 
-%%  VLM MESH  (full-span, NP_v = 2*NP_s panels)
+%%  VLM MESH  (full-span, NP_v panels)
 % The VLM functions expect NP panels spanning tip-to-tip with y/L running from -1 to +1.  NP_v MUST be even.
 NP_v = 2*NP_s ;             % total full-span VLM panels
 DY_v = 2/NP_v ;             % dimensionless VLM panel span
@@ -50,8 +50,10 @@ C_Y_v = c*(1 - lambda*Y_L_v) ;
 c_Y_v = [C_Y_v(end:-1:2), C_Y_v] ;      % mirror: left tip -> right tip
 
 % Geometry lines (half-chord sweep reference)
-x_hc_v = sign(y_L_v).*abs(y_L_v)*L*tand(LAM) ;          % half-chord x
+x_hc_v = abs(y_L_v) * L * tand(LAM);        % half-chord x
 x_qc_v = -0.25*c_Y_v + x_hc_v ;                         % quarter-chord x
+x_le_v = -0.5*c_Y_v+x_hc_v ;                            % leading edge
+x_te_v = 0.5*c_Y_v+x_hc_v ;                             % trailing edge
 x_3qc_v =  0.25*c_Y_v + x_hc_v ;                        % 3/4-chord x
 z_v = zeros(size(y_L_v)) ;
 
@@ -102,8 +104,8 @@ Li_s = qinf*c_Y*a3*alpha(trimstep) ;                % 1 x (NP_s+1) half-span lif
 % Store rigid CL distribution for final comparison plot
 CL_y_R = Li_s./(qinf*c_Y) ;                         % local CL, rigid strip theory
 
-%%  HELPER: build basis functions on the structural half-span grid
-% We pre-declare them outside the loop so MATLAB is happy
+%%  STEP 1: build basis functions on the structural half-span grid
+% declare them outside the loop 
 psi_i = zeros(N, NP_s+1) ;
 psi_id = zeros(N, NP_s+1) ;
 phi_i = zeros(M, NP_s+1) ;
@@ -112,6 +114,7 @@ for ii = 1:N
     psi_i(ii,:) = y_L.^(ii+1) ;
     psi_id(ii,:) = ((ii+1)/L)*y_L.^ii ;
 end
+
 for ii = 1:M
     phi_i(ii,:) = y_L.^ii ;
 end
@@ -120,17 +123,19 @@ end
 Mi_s = e*c*Li_s ;            % pitching moment per unit span (strip seed)
 
 F = zeros(N+M, 1) ;
+
 for ii = 1:N
     F(ii) = trapz(y_L, Li_s.*psi_i(ii,:))*L ;
 end
+
 for ii = 1:M
     F(ii+N) = trapz(y_L, Mi_s.*phi_i(ii,:))*L ;
 end
 
 %% STEP 3 – Structural solve
 eta = E_stiff\F ;
-theta = phi_i'*eta(N+1:N+M) ;   % (NP_s+1) x 1  torsion
-wd = psi_id'*eta(1:N) ;         % (NP_s+1) x 1  bending slope
+theta = phi_i'*eta(N+1:N+M) ;           % (NP_s+1) x 1 torsion
+wd = psi_id'*eta(1:N) ;                 % (NP_s+1) x 1 bending slope
 
 %% STEP 4 – Elastic angle of attack (half-span)
 alphae_half = alpha(trimstep) + theta*cosd(LAM) - wd*sind(LAM) ;        % (NP_s+1) x 1
@@ -144,11 +149,11 @@ alphae_half = alpha(trimstep) + theta*cosd(LAM) - wd*sind(LAM) ;        % (NP_s+
 alphae_panels = 0.5*(alphae_half(1:end-1) + alphae_half(2:end)) ;       % NP_s x 1
 
 % Mirror to full span (port = flip of starboard)
-alphae_full = [flip(alphae_panels); alphae_panels]' ;                  % 1 x NP_v  row vector
-
+alphae_full = [flip(alphae_panels); alphae_panels]' ;                   % 1 x NP_v  row vector
+ 
 % VLM call
 [Li_vlm, Cltot] = solve_VLM(alphae_full, Vinf, rho, S, NP_v, A_v, B_v, C_v, n_v, DY_v, L) ;
-Li_vlm = Li_vlm(:)' ;           % force 1 x NP row vector
+Li_vlm = Li_vlm(:)' ;                                                   % force 1 x NP row vector
 
 % Extract starboard half-span lift (panels NP_v/2+1 : NP_v)
 Li_star = Li_vlm(NP_v/2+1 : NP_v) ;                                     % 1 x NP_s  (one value per structural panel)
@@ -157,15 +162,15 @@ Li_star = Li_vlm(NP_v/2+1 : NP_v) ;                                     % 1 x NP
 y_panels = 0.5*(y_L(1:end-1) + y_L(2:end)) ;                            % NP_s panel-centre y/L
 Li_s = interp1(y_panels, Li_star, y_L, 'linear', 'extrap') ;            % 1 x (NP_s+1)
 
-Ltot = sum(Li_vlm) ;
+L_tot = sum(Li_vlm) ;
 fprintf('Step %i | Ltot = %.1f N | mg = %.1f N | error = %.1f N | alpha = %.4f rad\n', ...
-        trimstep, Ltot, mg, Ltot-mg, alpha(trimstep)) ;
+        trimstep, L_tot, mg, L_tot-mg, alpha(trimstep)) ;
 
 %%  TRIM LOOP (Steps 6–8)
 for trimstep = 2:300
 
     % STEP 6: update elastic AoA from previous structural state 
-    alphae_half = alpha(trimstep-1) + theta*cosd(LAM) - wd*sind(LAM) ; % (NP_s+1) x 1
+    alphae_half = alpha(trimstep-1) + theta*cosd(LAM) - wd*sind(LAM) ;                  % (NP_s+1) x 1
 
     % Mirror to full span (row vector, NP_v values)
     alphae_panels = 0.5*(alphae_half(1:end-1) + alphae_half(2:end)) ;
@@ -176,14 +181,13 @@ for trimstep = 2:300
 
     % Starboard half only
     Li_star = Li_vlm(NP_v/2+1 : NP_v)/dy ;
-    % Li_star = Li_star/dy ;
 
     % Interpolate panel lift to structural stations
     Li_s = interp1(y_panels, Li_star, y_L, 'linear', 'extrap') ;
 
     % Total lift
-    Ltot  = sum(Li_vlm) ;
-    L_over = Ltot - mg ;
+    L_tot  = sum(Li_vlm) ;
+    L_over = L_tot - mg ;
 
     % STEP 7: trim correction to root alpha 
     % Correction proportional to lift error; scale by full-span VLM CL_alpha
@@ -192,7 +196,7 @@ for trimstep = 2:300
     alpha(trimstep) = alpha(trimstep-1) - a_over * 0.01 ;
 
     fprintf('Step %3i | L_tot = %8.1f N | L_over = %+8.1f N | a_over = %+.5f | alpha = %.5f rad\n', ...
-            trimstep, Ltot, L_over, a_over, alpha(trimstep)) ;
+            trimstep, L_tot, L_over, a_over, alpha(trimstep)) ;
 
     % STEP 8: structural solve with updated aerodynamic loads 
     Mi_s = e * c * Li_s ;
@@ -222,11 +226,30 @@ alphae_half = alpha(end) + theta*cosd(LAM) - wd*sind(LAM) ;
 
 % Final spanwise lift coefficient
 CL_y = Li_s./(qinf*c_Y) ;               % local CL
-CL_total = Ltot/(qinf*S) ;              % wing CL
+CL_total = L_tot/(qinf*S) ;              % wing CL
 CL_norm = (CL_y/CL_total)' ;            % normalised
 
 toc
 %%  PLOTS
+
+% wing geometry plotting
+figure('Name', 'Wing')
+title('Warren-12 wing', 'FontSize', 14, 'FontWeight', 'bold')
+plot3(x_le_v,y_L_v*L,z_v) ;                         % plot leading edge
+hold on
+plot3(x_hc_v,y_L_v*L,z_v,'--') ;                      % plot half chord
+plot3(x_te_v,y_L_v*L,z_v) ;                           % plot trailing edge
+plot3([x_le_v(NP_v+1) x_te_v(NP_v+1)],[L L],[0 0]) ;    % plot chord at tips
+plot3([x_le_v(1) x_te_v(1)],[-L -L],[0 0]) ;        % plot chord at tips
+plot3(x_qc_v,y_L_v*L,z_v,'r--')                       % plot out quarter chord, along which vortex positions lie
+plot3(x_3qc_v,y_L_v*L,z_v,'g--')                      % plot out 3/4 chord, along which collocation points lie
+grid on 
+axis equal
+% plot points A,B,C as a check
+plot3(A_v(1,:), A_v(2,:), A_v(3,:),'ro')
+plot3(B_v(1,:), B_v(2,:), B_v(3,:),'r+')
+plot3(C_v(1,:), C_v(2,:), C_v(3,:),'go')
+hold off
 
 % Spanwise lift coefficient 
 figure('Name','Spanwise Lift Coefficient (VLM elastic)')
