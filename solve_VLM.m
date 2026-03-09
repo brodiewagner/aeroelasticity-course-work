@@ -30,7 +30,6 @@ function [Li, Cltot] = solve_VLM(alpha_vector, Vinf, rho, S, NP, A, B, C, n, DY,
     
     % 4. Compute Local Lift (Li)
     Li = rho*Vinf*gamma'.*(DY*L) ;   
-    Li = Li(:, 1) ;                       % force 1×NP row vector
     
     % 5. Total Lift Coefficient
     Ltot = sum(Li);

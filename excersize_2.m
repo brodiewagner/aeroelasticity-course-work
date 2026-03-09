@@ -11,7 +11,7 @@ LAM = 45 ;          % sweep in degrees
 % Meshing part
 NP = 50 ;                       % Number of panels
 DY = 1/(NP) ;                   % Dimensionless panel span
-y_L = 0:DY:1 ;                  % Panel position along one wing
+y_L = -1:DY:1 ;                 % Panel position along both wings
 c_Y = c*(1-lambda*y_L) ;        % chord along the span due to taper
 dy = DY*L ;                     % Actual panel span
 S = trapz(c_Y)*dy*2 ;           % Wing area
@@ -106,7 +106,7 @@ for trimstep = 2:200
     
     % lift for elastic wing
     alphae_ctrl = alphae(1:NP) ; 
-    [L_i, Cltot] = solve_VLM(alphae, Vinf, rho, S, NP, A, B, C, n, DY, L);      % can use different function (strip theory not fully accurate)
+    [Li, Cltot] = solve_VLM(alphae', Vinf, rho, S, NP, A, B, C, n, DY, L) ;      % can use different function (strip theory not fully accurate)
     L_tot = sum(L_i)*2 ;                                                        % total lift
     L_over = L_tot - mg ;                                                       % compute integral of lift and Lift "error"
     
