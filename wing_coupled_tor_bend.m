@@ -49,15 +49,15 @@ x = xs*b ;
     for i=1:M
         phi_i = (y_L).^i ;                                          % ith torsional function for wing
         phi_i_store = (Ls/L).^i ;                                   % ith torsional function for store
-        phi_i_single = ((i)/(L)).*((y_L).^(i-1)) ;                   % ith torsional function first derivative (phi')
+        phi_i_single = ((i)/(L)).*((y_L).^(i-1)) ;                  % ith torsional function first derivative (phi')
         for j = 1:M
-            phi_j = (y_L).^j ;                                      % jth torsional function for wing 
-            phi_j_store = (Ls/L).^j ;                               % jth torsional function for store
-            phi_j_single = ((j)/(L)).*((y_L).^(j-1)) ;               % jth torsional function first derivative (phi')
+            phi_j = (y_L).^j ;                                          % jth torsional function for wing 
+            phi_j_store = (Ls/L).^j ;                                   % jth torsional function for store
+            phi_j_single = ((j)/(L)).*((y_L).^(j-1)) ;                  % jth torsional function first derivative (phi')
             % D, D_store and T matrices
-            D(i,j) = (L-0)*trapz(y_L, phi_i.*phi_j) ;                % D matrix for wing
-            D_s(i,j) = phi_i_store.*phi_j_store ;                    % D matrix for store
-            T(i,j) = (L-0)*trapz(y_L, phi_i_single.*phi_j_single) ;       % T matrix
+            D(i,j) = (L-0)*trapz(y_L, phi_i.*phi_j) ;                       % D matrix for wing
+            D_s(i,j) = phi_i_store.*phi_j_store ;                           % D matrix for store
+            T(i,j) = (L-0)*trapz(y_L, phi_i_single.*phi_j_single) ;         % T matrix
         end
     end
     % Define functions for i bending and j torsion to determine C matrix
@@ -221,10 +221,10 @@ f_sorted = sort(f, 1);          % ensures F1 is always the lowest line, F2 is th
 x_span = 0:0.01:1;
 
 % experimental data
-% exp_yL = [0, 0.23, 0.42, 0.54, 0.60, 0.85, 0.94, 0.98]; 
-% exp_1B = [6.4, 6.4,  6.0,  5.5,  5.4,  4.2,  4.0,  3.8];    
-% exp_2B = [36.1, 30.0, 35.5, 34.0, 35.0, 24.0, 23.5, 34.0]; 
-% exp_1F = [45.9, 40.0, NaN,  23.5, 24.5, 23.8, 23.4, 22.0];  
+exp_yL = [0, 0.23, 0.42, 0.54, 0.60, 0.85, 0.94, 0.98]; 
+exp_1B = [6.4, 6.4,  6.0,  5.5,  5.4,  4.2,  4.0,  3.8];    
+exp_2B = [36.1, 30.0, 35.5, 34.0, 35.0, 24.0, 23.5, 34.0]; 
+exp_1F = [45.9, 40.0, NaN,  23.5, 24.5, 23.8, 23.4, 22.0];  
 
 figure;
 hold on;
