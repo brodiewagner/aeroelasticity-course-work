@@ -20,6 +20,9 @@
 % REQUIREMENTS:
 %   V_AB.m, VA_INF.m, VB_INF.m, solve_VLM.m, stiffness_matrix.m must 
 %   all be on the MATLAB path.
+%
+% PROBLEMS:
+%   Values for Lift Coefficient are a little low at the root. dk why
 % ==========================================================================================================================
 
 clear
@@ -154,7 +157,7 @@ Li_star = Li_vlm(NP_v/2+1 : NP_v)/dy ;                                     % 1 x
 
 % Map panel lift onto structural stations by linear interpolation (structural stations are at panel edges; panels are centred between them)
 y_panels = 0.5*(y_L(1:end-1) + y_L(2:end)) ;                            % NP_s panel-centre y/L
-Li_s = interp1(y_panels, Li_star, y_L, 'linear', 'extrap') ;            % 1 x (NP_s+1)
+Li_s = interp1(y_panels, Li_star, y_L, 'linear') ;                      % 1 x (NP_s+1)
 
 L_tot = sum(Li_vlm) ;
 fprintf('Step %3i | L_tot = %8.1f N | mg = %12.1f N | error = %.1f N | alpha = %.4f degrees\n', ...
