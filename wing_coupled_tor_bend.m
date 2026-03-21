@@ -111,7 +111,7 @@ end
     % select mode
     mode = 5 ;
     % select store position
-    store_pos = 10 ;
+    store_pos = 5 ;
     EA_z = zeros(1,length(y_L)) ;
     theta_EA = zeros(1,length(y_L)) ;
     % Determine the amount of bending
@@ -149,6 +149,53 @@ end
     
     x_EA = zeros(1, length(y_L));
     z_EA = EA_z;
+
+%% Experimental Data
+
+data = [
+    0,     0,        6.45, 39.2   47.3    ;
+    0,     0,        6.43, 39.2   39.2    ;
+    11,    0.234043, 6.64, 30.41, 40      ;
+    11,    0.234043, 6.64, 30.15, 40.21   ;
+    20.5,  0.43617,  6.14, 35.6,  35.6    ; 
+    20.5,  0.43617,  6.15, 35.6,  35.6    ;
+    26,    0.553191, 5.56, 33.69, 24.27   ; 
+    26,    0.553191, 5.54, 34,    22.91   ;
+    29,    0.617021, 5.22, 35.1,  24.74   ;
+    29,    0.617021, 5.3,  36.11, 24.63   ;
+    41,    0.87234,  4.17, 38.5,  23.9    ;
+    41,    0.87234,  4.17, 38.3,  23.9    ;
+    44,    0.93617,  3.86, 35.83, 23.59   ;
+    44,    0.93617,  3.86, 36,    23.59   ;
+    44,    0.93617,  3.83, 35.8,  23.38   ;
+    44,    0.93617,  3.8,  25.64, 23.33   ;
+    44,    0.93617,  3.84, 35.83, 23.29   ;
+    44,    0.93617,  3.87, 36.35, 23.52   ;
+    47,    1,        3.65, 34.35, 22.5    ;
+    47,    1,        3.68, 34.25, 22.5    ;
+    47,    1,        3.59, 33.13, 20.63   ;
+    47,    1,        3.62, 33.74, 22.6    ;
+    47,    1,        3.59, 33.74, 22.02   ;
+    47,    1,        3.61, 34.09, 22.83 ] ;
+
+store_pos_in = data(:, 1);
+store_pos_yL = data(:, 2);
+exp_B1 = data(:, 3);            % experimental data for first bending 
+exp_B2 = data(:, 4);            % experimental data for second bending 
+exp_T  = data(:, 5);            % experimental data for torsion
+
+% Find the unique y/L positions
+[unique_yL, ~, idx] = unique(store_pos_yL);
+
+% Calculate the Mean for each unique position
+mean_B1 = accumarray(idx, exp_B1, [], @mean);
+mean_B2 = accumarray(idx, exp_B2, [], @mean);
+mean_T  = accumarray(idx, exp_T,  [], @mean);
+
+% Calculate the Standard Deviation (Error) for each unique position
+std_B1 = accumarray(idx, exp_B1, [], @std);
+std_B2 = accumarray(idx, exp_B2, [], @std);
+std_T  = accumarray(idx, exp_T,  [], @std);
 
 %% 3D PLOT --------------------------------------------------------------------------------------------------------------
 
@@ -220,24 +267,19 @@ f_sorted = sort(f, 1);          % ensures F1 is always the lowest line, F2 is th
 % create x-axis array for computed lines 
 x_span = 0:0.01:1;
 
-% experimental data
-exp_yL = [0, 0.23, 0.42, 0.54, 0.60, 0.85, 0.94, 0.98]; 
-exp_1B = [6.4, 6.4,  6.0,  5.5,  5.4,  4.2,  4.0,  3.8];    
-exp_2B = [36.1, 30.0, 35.5, 34.0, 35.0, 24.0, 23.5, 34.0]; 
-exp_1F = [45.9, 40.0, NaN,  23.5, 24.5, 23.8, 23.4, 22.0];  
-
 figure;
 hold on;
 
 % plot the computed lines (rows 1, 2, and 3 of f_sorted)
-plot(x_span, f_sorted(1,:), '-k', 'LineWidth', 2.5, 'DisplayName', 'Computed F1');   % Solid
-plot(x_span, f_sorted(2,:), '--k', 'LineWidth', 2.5, 'DisplayName', 'Computed F2');  % Dashed
-plot(x_span, f_sorted(3,:), '-.k', 'LineWidth', 2.5, 'DisplayName', 'Computed F3');  % Dash-Dot
+plot(x_span, f_sorted(1,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F1');   % Solid
+plot(x_span, f_sorted(2,:), '--', 'LineWidth', 2.5, 'DisplayName', 'Computed F2');  % Dashed
+plot(x_span, f_sorted(3,:), '-.', 'LineWidth', 2.5, 'DisplayName', 'Computed F3');  % Dash-Dot
 
-% % plot the experimental data markers
-% plot(exp_yL, exp_1B, 'sk', 'MarkerSize', 10, 'LineWidth', 1.5, 'DisplayName', 'Experimental 1B');
-% plot(exp_yL, exp_2B, 'ok', 'MarkerSize', 10, 'LineWidth', 1.5, 'DisplayName', 'Experimental 2B');
-% plot(exp_yL, exp_1F, 'sk', 'MarkerSize', 10, 'LineWidth', 1.5, 'DisplayName', 'Experimental 1F'); 
+% Plot the experimental data markers with ERROR BARS
+% Syntax: errorbar(x, y, error, 'LineStyle', 'none', 'Marker', ...)
+errorbar(unique_yL, mean_B1, std_B1, '^k', 'MarkerSize', 10, 'LineWidth', 1, 'DisplayName', 'Experimental 1B');
+errorbar(unique_yL, mean_B2, std_B2, 'ok', 'MarkerSize', 10, 'LineWidth', 1, 'DisplayName', 'Experimental 2B');
+errorbar(unique_yL, mean_T, std_T, 'sk', 'MarkerSize', 10, 'LineWidth', 1, 'DisplayName', 'Experimental 1T');
 
 % figure formatting 
 xlabel('Store position (y/L)', 'FontSize', 16);
@@ -250,7 +292,7 @@ ylim([0 50]);
 
 grid on
 grid minor
-legend('Location', 'northeast', 'FontSize', 12);
+legend('Location', 'northeast', 'FontSize', 12, "Position", [0.8118 0.7876 0.1616, 0.1796]);
 
 % clean up the axes 
 box off;

@@ -12,8 +12,9 @@ IA = 0.5 ;                  % non dimensional inertial axis position chords
 x_b = IA - EA ; 
 EI = 140700*6894.75728 ;    % bending stiffness (N·m^2)
 GJ = 69200*6894.75728 ;     % torsional stiffness (N·m^2/rad)
-mbar = 1 ;                  % kg mass per unit span of wing
-Iwing = 1 ;                 % kg m^2/m pitch moment of inertia of wing
+mbar = mw/L ;               % mass per unit span of wing kg/m
+I_total = 4.349e-3;         % Total wing pitch inertia
+Iwing = I_total / L;        % Moment of inertia per unit span
 rho = mbar/(pi*b*b*32.6);   % air density (kg/m^3)
 e = (EA/c)-(1/4);           % elastic axis local relative quarter chord
 a = (e*c)/b-0.5;            % elastic axis position
@@ -88,17 +89,17 @@ K = [    EI*B,      zeros(N,M)  ;
 
 % Total mass matrix achieved by combining the mass matrices of store and wing
     Mt = Mwing + Mstore ;
-    
+   
 for ii = 1:150
     k = ii*0.01;
     % Calculate Theodorsen function
     C_theo = besselk(1,(j*k))./(besselk(0,(j*k)) + besselk(1,j*k)) ;
     % Calculate the A_mat, B_Mat, C_mat matrices
-    A_mat = -2*pi*b*(k^2)*[   Del             a*b*C          ;
+    A_mat = -pi*rho*(b^2)*[   Del             a*b*C          ;
                             a*b*(C') (b^2)*((a^2)+(1/8))*D ] ;
-    B_mat = -2*pi*k*j*[      2*C_theo*Del               (-b)*(1 + 2*(0.5 - a)*C_theo)*C      ;
+    B_mat = -pi*rho*b*U*[      2*C_theo*Del               (-b)*(1 + 2*(0.5 - a)*C_theo)*C      ;
                        2*b*(0.5 + a)*C_theo*(C')   (b^2)*(0.5-a)*(1 - 2*(0.5 + a)*C_theo)*D] ;
-    C_mat = -2*pi*b*[   zeros(N, N)         -2*C_theo*C        ;
+    C_mat = -pi*rho*b*(U^2)*[   zeros(N, N)         -2*C_theo*C        ;
                         zeros(M, N)    -b*(1+(2*a))*C_theo*D ] ;
    
     A_hat = A_mat + B_mat + C_mat ;
@@ -113,7 +114,7 @@ for ii = 1:150
     % calculate corresponding speed
     U(:,ii)=(omega(:,ii).*b)/k;
     
-    % flutter offurs at zero damping
+    % flutter occurs at zero damping
 end
 
 % check for solutions crossing the imaginary axis 

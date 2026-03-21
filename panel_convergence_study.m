@@ -9,23 +9,24 @@
 %   V_AB.m, VA_INF.m, VB_INF.m, solve_VLM.m, stiffness_matrix.m
 % ==========================================================================================================================
 
-clear; clc;
+clear ;
+clc ;
 
 %% ---- PANEL COUNTS TO TEST (must be even) -------------------------
 NP_s_list = [16, 32, 64, 100] ;   % half-span structural panels
 n_cases   = numel(NP_s_list) ;
 
 %% ---- FIXED WING / FLIGHT PARAMETERS (unchanged from ex_2_raw.m) --
-c      = 1.5  ;   % root chord (m)
-lambda = 0.4  ;   % taper ratio
-L      = 6    ;   % semi-span (m)
-e      = 0.25 ;   % elastic axis offset (chords aft of quarter-chord)
-LAM    = 25   ;   % half-chord sweep angle (deg)
+c = 1.5 ;         % root chord (m)
+lambda = 0.4 ;    % taper ratio
+L = 6 ;           % semi-span (m)
+e = 0.25 ;        % elastic axis offset (chords aft of quarter-chord)
+LAM = 25 ;        % half-chord sweep angle (deg)
 
-mg     = 10e3*9.81   ;
-Vinf   = 150         ;
-rho    = 0.5238*1.225;
-qinf   = 0.5*rho*Vinf^2 ;
+mg = 10e3*9.81 ;
+Vinf = 150 ;
+rho = 0.5238*1.225 ;
+qinf = 0.5*rho*Vinf^2 ;
 
 EI = 2e6 ;
 GJ = 5e5 ;
@@ -44,7 +45,7 @@ for ic = 1:n_cases
     NP_s = NP_s_list(ic) ;
     fprintf('\n=== NP_s = %d ===\n', NP_s) ;
 
-    %% Structural mesh (half-span)
+    % Structural mesh (half-span)
     DY_s = 1/NP_s ;
     y_L  = 0:DY_s:1 ;
     c_Y  = c*(1 - lambda*y_L) ;
@@ -52,7 +53,7 @@ for ic = 1:n_cases
     S    = trapz(c_Y)*dy*2 ;
     AR   = (2*L)^2/S ;
 
-    %% VLM mesh (full-span)
+    % VLM mesh (full-span)
     NP_v  = 2*NP_s ;
     DY_v  = 2/NP_v ;
     Y_L_v = 0:DY_v:1 ;
@@ -79,10 +80,10 @@ for ic = 1:n_cases
         n_v(:,k) = nk / norm(nk) ;
     end
 
-    %% Stiffness matrix
+    % Stiffness matrix
     E_stiff = stiffness_matrix(N, M, EI, GJ, L, y_L) ;
 
-    %% Basis functions
+    % Basis functions
     psi_i  = zeros(N, NP_s+1) ;
     psi_id = zeros(N, NP_s+1) ;
     phi_i  = zeros(M, NP_s+1) ;
@@ -94,7 +95,7 @@ for ic = 1:n_cases
         phi_i(ii,:) = y_L.^ii ;
     end
 
-    %% Initial trim estimate (strip theory seed)
+    % Initial trim estimate (strip theory seed)
     a3 = 2*pi*AR / (2 + sqrt(4 + AR^2)) ;
     alpha_cur = mg/(qinf*S*a3) ;
 
