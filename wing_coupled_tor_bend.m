@@ -28,8 +28,8 @@ x = xs*b ;
     % calculate Delta, Deltas, B, C, D and T matrices.
     % setup functions for bending, 3 bending and 2 torsion modes
     y_L = 0:0.01:1 ;
-    N = 3 ;                                                      % assume as a first test the bending 
-    M = 2 ;                                                      % and torsion modes
+    N = 5 ;                                                      % assume as a first test the bending 
+    M = 4 ;                                                      % and torsion modes
 
     for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
@@ -284,7 +284,10 @@ errorbar(unique_yL, mean_T, std_T, 'sk', 'MarkerSize', 10, 'LineWidth', 1, 'Disp
 % figure formatting 
 xlabel('Store position (y/L)', 'FontSize', 16);
 ylabel('Frequency [Hz]', 'FontSize', 16);
-title('First 3 modal frequencies vs Store Position', 'FontSize', 18, 'FontWeight', 'bold');
+
+% title based on selected N and M values
+title_str = sprintf('First 3 modal frequencies vs Store Position (N = %d, M = %d)', N, M) ;
+title(title_str, 'FontSize', 18, 'FontWeight', 'bold');
 
 % axis limits
 xlim([0 1]);
