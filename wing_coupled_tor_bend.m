@@ -28,8 +28,8 @@ x = xs*b ;
     % calculate Delta, Deltas, B, C, D and T matrices.
     % setup functions for bending, 3 bending and 2 torsion modes
     y_L = 0:0.01:1 ;
-    N = 5 ;                                                      % assume as a first test the bending 
-    M = 4 ;                                                      % and torsion modes
+    N = 3 ;                                                      % assume as a first test the bending 
+    M = 2 ;                                                      % and torsion modes
 
     for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
@@ -272,8 +272,8 @@ hold on;
 
 % plot the computed lines (rows 1, 2, and 3 of f_sorted)
 plot(x_span, f_sorted(1,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F1');   % Solid
-plot(x_span, f_sorted(2,:), '--', 'LineWidth', 2.5, 'DisplayName', 'Computed F2');  % Dashed
-plot(x_span, f_sorted(3,:), '-.', 'LineWidth', 2.5, 'DisplayName', 'Computed F3');  % Dash-Dot
+plot(x_span, f_sorted(2,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F2');  % Dashed
+plot(x_span, f_sorted(3,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F3');  % Dash-Dot
 
 % Plot the experimental data markers with ERROR BARS
 % Syntax: errorbar(x, y, error, 'LineStyle', 'none', 'Marker', ...)

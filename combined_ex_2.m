@@ -22,7 +22,11 @@
 %   all be on the MATLAB path.
 %
 % PROBLEMS:
-%   Values for Lift Coefficient are a little low at the root. dk why
+%   Values for Lift Coefficient are a little low at the root
+%       - Unsure why
+%   Trim converges at a slightly lower value than expected 
+%       - results  = ~ 8
+%       - expected = ~ 10
 % ==========================================================================================================================
 
 clear
@@ -115,7 +119,7 @@ CL_y_R = Li_s./(qinf*c_Y) ;                         % local CL, rigid strip theo
 psi_i = zeros(N, NP_s+1) ;
 psi_id = zeros(N, NP_s+1) ;
 phi_i = zeros(M, NP_s+1) ;
-Mi_s = e*cr*Li_s ;            % pitching moment per unit span (strip seed)
+Mi_s = e.*c_Y.*Li_s ;            % pitching moment per unit span (strip seed)
 F = zeros(N+M, 1) ;
 
 for ii = 1:N
@@ -196,7 +200,7 @@ for trimstep = 2:300
             trimstep, L_tot, L_over, a_over, alpha(trimstep)*180/pi) ;
 
     % STEP 8: structural solve with updated aerodynamic loads 
-    Mi_s = e * cr * Li_s ;
+    Mi_s = e .* c_Y .* Li_s ;
 
     F = zeros(N+M, 1) ;
     for ii = 1:N
@@ -253,61 +257,61 @@ figure('Name','Spanwise Lift Coefficient (VLM elastic)')
 hold on 
 grid on
 grid minor
-plot(y_L, CL_y, '-b',  'LineWidth', 2, 'DisplayName','CL (elastic VLM)')
-plot(y_L, CL_norm, '-g',  'LineWidth', 2, 'DisplayName','CL/CL_{total} (normalised)')
-plot(y_L, CL_y_R, '-r', 'LineWidth', 1.5, 'DisplayName','CL (rigid strip theory seed)')
+plot(y_L, CL_y, 'o',  'LineWidth', 2, 'DisplayName','CL (elastic VLM)', 'Color', [0 0.427 0.831])
+plot(y_L, CL_norm, 'o',  'LineWidth', 2, 'DisplayName', 'CL/CL_{total} (normalised)', 'Color', [0.286 0.678 0])
+plot(y_L, CL_y_R, '--r', 'LineWidth', 1.5, 'DisplayName','CL (rigid strip theory seed)')
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Lift coefficient C_L', 'FontSize', 14)
 title(sprintf('Spanwise Lift Coefficient – Elastic Wing (LAM = %.0f)', LAM), 'FontSize', 14)
 legend('Location','southwest', 'FontSize', 11)
 
-% % Elastic angle of attack
-% figure('Name','Elastic Angle of Attack')
-% hold on 
-% grid on
-% grid minor
-% plot(y_L, alphae_half*180/pi, '-b', 'LineWidth', 2)
-% xlabel('Dimensionless span (y/L)', 'FontSize', 14)
-% ylabel('Aeroelastic angle (deg)', 'FontSize', 14)
-% title('Spanwise Elastic Angle of Attack', 'FontSize', 14)
-% 
-% % Trim convergence 
-% figure('Name','Trim Convergence')
-% hold on
-% grid on
-% grid minor
-% plot(alpha*180/pi, '-b', 'LineWidth', 2)
-% xlabel('Iteration', 'FontSize', 14)
-% ylabel('Root pitch angle (deg)', 'FontSize', 14)
-% title('Trim Convergence History', 'FontSize', 14)
-% xlim([0 max(trimstep)])
-% 
-% % Torsion angle 
-% figure('Name','Torsion Distribution')
-% hold on 
-% grid on
-% grid minor
-% plot(y_L, theta*180/pi, '-b', 'LineWidth', 2)
-% xlabel('Dimensionless span (y/L)', 'FontSize', 14)
-% ylabel('Torsion angle (deg)', 'FontSize', 14)
-% title('Spanwise Torsion Distribution', 'FontSize', 14)
-% 
-% % Bending slope 
-% figure('Name','Bending Slope Distribution')
-% hold on 
-% grid on
-% grid minor
-% plot(y_L, wd, '-b', 'LineWidth', 2)
-% xlabel('Dimensionless span (y/L)', 'FontSize', 14)
-% ylabel('Bending slope dw/dy (m)', 'FontSize', 14)
-% title('Spanwise Bending Slope Distribution', 'FontSize', 14)
-% 
-% % Spanwise loading Li 
-% figure('Name','Spanwise Loading (VLM elastic)')
-% hold on 
-% grid on
-% grid minor
-% plot(y_L, Li_s, '-b', 'LineWidth', 2)
-% xlabel('Dimensionless span (y/L)', 'FontSize', 14)
-% ylabel('Local lift L_i (N)', 'FontSize', 14)
-% title('Spanwise Load Distribution – Elastic Wing (VLM)', 'FontSize', 14)
+% Elastic angle of attack
+figure('Name','Elastic Angle of Attack')
+hold on 
+grid on
+grid minor
+plot(y_L, alphae_half*180/pi, 'ob', 'LineWidth', 2)
+xlabel('Dimensionless span (y/L)', 'FontSize', 14)
+ylabel('Aeroelastic angle (deg)', 'FontSize', 14)
+title('Spanwise Elastic Angle of Attack', 'FontSize', 14)
+
+% Trim convergence 
+figure('Name','Trim Convergence')
+hold on
+grid on
+grid minor
+plot(alpha*180/pi, 'ob', 'LineWidth', 2)
+xlabel('Iteration', 'FontSize', 14)
+ylabel('Root pitch angle (deg)', 'FontSize', 14)
+title('Trim Convergence History', 'FontSize', 14)
+xlim([0 max(trimstep)])
+
+% Torsion angle 
+figure('Name','Torsion Distribution')
+hold on 
+grid on
+grid minor
+plot(y_L, theta*180/pi, 'ob', 'LineWidth', 2)
+xlabel('Dimensionless span (y/L)', 'FontSize', 14)
+ylabel('Torsion angle (deg)', 'FontSize', 14)
+title('Spanwise Torsion Distribution', 'FontSize', 14)
+
+% Bending slope 
+figure('Name','Bending Slope Distribution')
+hold on 
+grid on
+grid minor
+plot(y_L, wd, 'ob', 'LineWidth', 2)
+xlabel('Dimensionless span (y/L)', 'FontSize', 14)
+ylabel('Bending slope dw/dy (m)', 'FontSize', 14)
+title('Spanwise Bending Slope Distribution', 'FontSize', 14)
+
+% Spanwise loading Li 
+figure('Name','Spanwise Loading (VLM elastic)')
+hold on 
+grid on
+grid minor
+plot(y_L, Li_s, 'ob', 'LineWidth', 2)
+xlabel('Dimensionless span (y/L)', 'FontSize', 14)
+ylabel('Local lift L_i (N)', 'FontSize', 14)
+title('Spanwise Load Distribution – Elastic Wing (VLM)', 'FontSize', 14)

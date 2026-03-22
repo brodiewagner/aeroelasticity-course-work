@@ -19,7 +19,7 @@ rho = mbar/(pi*b*b*32.6);   % air density (kg/m^3)
 e = (EA/c)-(1/4);           % elastic axis local relative quarter chord
 a = (e*c)/b-0.5;            % elastic axis position
 
-% parameters for wing store 4 
+% parameters for wing store 5 
 ms = 0.636*mw ;           % store mass, kg
 xs = -0.687 ;             % position of store ahead of Elastic Axis, m
 Is = 2.68*Iwing*L ;       % pitch inertia of store about centre , kg m^2
@@ -95,11 +95,11 @@ for ii = 1:150
     % Calculate Theodorsen function
     C_theo = besselk(1,(j*k))./(besselk(0,(j*k)) + besselk(1,j*k)) ;
     % Calculate the A_mat, B_Mat, C_mat matrices
-    A_mat = -pi*rho*(b^2)*[   Del             a*b*C          ;
+    A_mat = -2*pi*rho*b*(k^2)*[   Del             a*b*C          ;
                             a*b*(C') (b^2)*((a^2)+(1/8))*D ] ;
-    B_mat = -pi*rho*b*U*[      2*C_theo*Del               (-b)*(1 + 2*(0.5 - a)*C_theo)*C      ;
+    B_mat = -2*pi*rho*k*j*[      2*C_theo*Del               (-b)*(1 + 2*(0.5 - a)*C_theo)*C      ;
                        2*b*(0.5 + a)*C_theo*(C')   (b^2)*(0.5-a)*(1 - 2*(0.5 + a)*C_theo)*D] ;
-    C_mat = -pi*rho*b*(U^2)*[   zeros(N, N)         -2*C_theo*C        ;
+    C_mat = -2*pi*b*[   zeros(N, N)         -2*C_theo*C        ;
                         zeros(M, N)    -b*(1+(2*a))*C_theo*D ] ;
    
     A_hat = A_mat + B_mat + C_mat ;
