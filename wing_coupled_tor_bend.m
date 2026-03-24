@@ -79,8 +79,8 @@ x = xs*b ;
 Mwing = [   mbar*Del,   -mbar*x_b*C   ;
          -mbar*x_b*(C'),  Iwing*D   ] ;
 
-Mstore = [    ms*Dels,     ms*xs*b*C_s   ; 
-           ms*xs*b*(C_s'),   Is*D_s   ]   ;
+Mstore = [    ms*Dels,     ms*x*C_s   ; 
+           ms*x*(C_s'),   Is*D_s   ]   ;
 
 %Determince expression for the stiffness matrix, unaffected by the addition of a store
 K = [    EI*B,      zeros(N,M)  ;
@@ -109,9 +109,9 @@ end
     %Deflection and twist of the elastic axis create 11 store positions along span
     y_L=0:0.1:1;
     % select mode
-    mode = 5 ;
+    mode = 1 ;
     % select store position
-    store_pos = 5 ;
+    store_pos = 1 ;
     EA_z = zeros(1,length(y_L)) ;
     theta_EA = zeros(1,length(y_L)) ;
     % Determine the amount of bending

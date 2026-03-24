@@ -106,7 +106,8 @@ for trimstep = 2:200
     
     % lift for elastic wing
     alphae_ctrl = alphae(1:NP) ; 
-    [Li, Cltot] = solve_VLM(alphae', Vinf, rho, S, NP, A, B, C, n, DY, L) ;      % can use different function (strip theory not fully accurate)
+    
+    % L_i = 0.5*rho*Vinf^2*(c*(1-lambda*(y_L)))*a3*alpha(trimstep) ;
     L_tot = sum(L_i)*2 ;                                                        % total lift
     L_over = L_tot - mg ;                                                       % compute integral of lift and Lift "error"
     
@@ -137,8 +138,8 @@ for trimstep = 2:200
     eta = E\F ;
     
     % spanwise bending and twist
-    theta = phi_i'.*eta(N+1:N+M) ;
-    wd = psi_id'.*eta(1:N) ;
+    theta = phi_i'*eta(N+1:N+M) ;
+    wd = psi_id'*eta(1:N) ;
     
     % if within 1 percent of weight don't trim any more
     if abs(L_over) < mg/100 
@@ -156,11 +157,11 @@ CL_sweep = (CL_y/CL)' ;
 
 figure
 hold on
-plot (y_L,CL_y, '-b', 'LineWidth', 2)
+plot (y_L,CL_y,'-b')
 hold on
-plot(y_L,CL_sweep, '-g', 'LineWidth', 2)
+plot(y_L,CL_sweep,'-g')
 hold on
-plot (y_L,CL_y_R(1:51), '-r', 'LineWidth', 2)
+plot (y_L,CL_y_R(1:51),'-r')
 xlabel ('Dimensionless span (y/L)')
 ylabel ('Lift coefficeint (CL)')
 grid on
@@ -168,7 +169,7 @@ hold off
 
 figure
 hold on
-plot (y_L,alphae*180/pi, '-b', 'LineWidth', 2)
+plot (y_L,alphae*180/pi,'-b')
 xlabel ('Dimensionless span (y/L)')
 ylabel ('Aeroelastic angle (deg)')
 grid on
@@ -176,7 +177,7 @@ hold off
 
 figure
 hold on
-plot (alpha*180/pi, '-b', 'LineWidth', 2)
+plot (alpha*180/pi,'-b')
 xlabel ('Iteration')
 ylabel ('Pitch angle (deg)')
 grid on
@@ -184,7 +185,7 @@ hold off
 
 figure
 hold on
-plot (y_L,theta*180/pi, '-b', 'LineWidth', 2)
+plot (y_L,theta*180/pi,'-b')
 xlabel ('Dimensionless span (y/L)')
 ylabel ('Torsion angle (deg)')
 grid on
@@ -192,7 +193,7 @@ hold off
 
 figure
 hold on
-plot (y_L,wd,'-b', 'LineWidth', 2)
+plot (y_L,wd,'-b')
 xlabel ('Dimensionless span (y/L)')
 ylabel ('Bending (m)')
 grid on
