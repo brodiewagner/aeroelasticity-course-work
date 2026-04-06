@@ -2,6 +2,7 @@ clear
 clc
 close all
 
+%% Define Parameters
 % wing parameters
 mw = 3.48*0.4535924 ;       % wing mass (kg)
 AR = 6 ;                    % Aspect Ratio
@@ -37,14 +38,16 @@ weight_no = '5' ;
 % xf = xs*b ;
 % weight_no = '7e' ;
 
+%% Assumed Shapes Method
 % store position at 100 points along span
 for int_pos = 1:1:101
     Ls = (int_pos-1).*(L/100) ;
     y_L = 0:0.01:1 ;
     N = 3 ;
     M = 2 ;
+    
     % calculate Delta, Deltas, B, C, D and T matrices setup functions for bending, 3 bending and 2 torsion modes 
-   for i=1:N
+    for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
         psi_i_store = (Ls/L).^(i+1) ;                               % ith bending funtion for store
         psi_i_double = ((i*(i+1))/L.^2).*((y_L).^(i-1)) ;           % ith bending function second derivative (psi'')
@@ -58,6 +61,7 @@ for int_pos = 1:1:101
            B(i,j) = (L-0)*trapz(y_L,psi_i_double.*psi_j_double) ;   % B matrix
         end
     end
+    
     % setup i and j torsion for wing and store, 2 torsion modes
     for i=1:M
         phi_i = (y_L).^i ;                                          % ith torsional function for wing
@@ -73,6 +77,7 @@ for int_pos = 1:1:101
             T(i,j) = (L-0)*trapz(y_L, phi_i_single.*phi_j_single) ;       % T matrix
         end
     end
+    
     % Define functions for i bending and j torsion to determine C matrix
     for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
@@ -102,6 +107,7 @@ K = [    EI*B,      zeros(N,M)  ;
 % Total mass matrix achieved by combining the mass matrices of store and wing
     Mt = Mwing + Mstore ;
    
+% Divergence and Flutter (k-method)
 for ii = 1:150
     k = ii*0.01;
     % Calculate Theodorsen function
@@ -123,7 +129,7 @@ for ii = 1:150
     U(:,ii) = (omega(:, ii).*b)/k ;                             % flutter occurs at zero damping
 end
 
-% % check for solutions crossing the imaginary axis 
+% check for solutions crossing the imaginary axis 
 int = find(-0.5*imag(g(2,:))>0) ; 
 int = int(end) ;
 int = polyfit([U(2,int) U(2,(int+1))], [(-0.5*imag(g(2,int))) (-0.5*imag(g(2,(int+1))))], 1) ;
@@ -131,62 +137,66 @@ Uf(int_pos) = abs(int(2))/abs(int(1)) ;
 
 end
 
-% convert feet per second to meters per second
-fps_to_mps = 3.28083989 ;
+%% Plotting & Experimental Data from NACA TN 1594
+
 % experimental dat afor mass "5"
-Span_5 = [0 0.234043 0.382979 0.553191 0.617021 0.787234 0.87234 1] ;
-Uf_5_fps = [331.5 288 243 234.5 230 242 247 252] ;
-% Uf_5 = [101.0412 81.6864 74.0664 71.3232 70.104 73.7616 75.2856 76.80961] ;
-Uf_5 = Uf_5_fps*fps_to_mps ;
+    Span_5 = [0 0.234043 0.382979 0.553191 0.617021 0.787234 0.87234 1] ;
+    Uf_5_fps = [331.5 288 243 234.5 230 242 247 252] ;
+    % Uf_5 = [101.0412 81.6864 74.0664 71.3232 70.104 73.7616 75.2856 76.80961] ;        % From graph 
+% convert feet per second to meters per second
+    fps_to_mps = 3.28083989 ;
+    Uf_5 = Uf_5_fps*fps_to_mps ;
 
 % data for mass "7e"
-% From graph
-    % Span_7e = [0, 0.23093922, 0.43976074, 0.54911888, 0.7296852, 0.83078590, 1] ;
-    % Uf_7e = [1, 0.934953, 0.854259, 0.8897015, 0.886371, 0.9493911, 1.023524] ;
-% From table data
-    Span_7e = [0 0.234043 0.446809 0.617021 0.744681 0.851064 1.021277] ;
-    Uf_7e_fps = [331.5 308 283 294 292 310 337] ;
-    Uf_7e = Uf_7e_fps*fps_to_mps ;
+    % From graph
+        % Span_7e = [0, 0.23093922, 0.43976074, 0.54911888, 0.7296852, 0.83078590, 1] ;
+        % Uf_7e = [1, 0.934953, 0.854259, 0.8897015, 0.886371, 0.9493911, 1.023524] ;
+    % From table data
+        Span_7e = [0 0.234043 0.446809 0.617021 0.744681 0.851064 1.021277] ;
+        Uf_7e_fps = [331.5 308 283 294 292 310 337] ;
+        Uf_7e = Uf_7e_fps*fps_to_mps ;
 
-% Plotting 
-
+% Plot
 figure('Name', sprintf('Validated Flutter Ratio - Weight %s', weight_no))
-plot(y_L, Uf/Uf(1), '-', 'DisplayName', 'Computed (k-method)', 'LineWidth', 2)
+plot(y_L, Uf/Uf(1), '-o', 'DisplayName', 'Computed (k-method)', 'LineWidth', 2)         
 hold on
-plot(Span_5, Uf_5/Uf_5(1), '^', ...
+plot(Span_5, Uf_5/Uf_5(1), '^', ...                                             % plotting experimental data
      'DisplayName', 'Exp. Data - Weight 5', ...
      'MarkerEdgeColor', [0.87 0.33 0], ...
      'LineWidth', 1.5, 'MarkerSize', 10)
-Uf_5_smooth = spline(Span_5, Uf_5/Uf_5(1), y_L);
-plot(y_L, Uf_5_smooth, '-', ...
+p = polyfit(Span_5, Uf_5/Uf_5(1), 4); Uf_5_bestfit = polyval(p, y_L);           % set up for best fit curve
+plot(y_L, Uf_5_bestfit, '-', ...                                                % plotting best fit curve
     'LineWidth', 1.75, ...
     'DisplayName', 'Best Fit Curve - Weight 5', ...
     'Color', [0.87 0.33 0])
-xlabel('Dimensionless Spanwise Position (y/L)', 'Interpreter', 'latex', 'FontSize', 15)
-ylabel('Flutter Speed Ratio $\biggl(\frac{U_w}{U_{F0}}\biggr)$', 'Interpreter', 'latex', 'FontSize', 15)
+xlabel('y/L', 'FontSize', 15)
+ylabel('$\biggl(\frac{U_w}{U_{F0}}\biggr)$', ...
+       'Interpreter', 'latex', 'FontSize', 15, 'Rotation', 0)
 title('Validation against NACA TN 1594 - Weight 5')
 set(gca, 'FontName', 'helvetica')
 legend('FontSize', 10)
 grid on
 grid minor
 
-% figure('Name', sprintf('Validated Flutter Ratio - Weight %s', mass_no))
+% figure('Name', sprintf('Validated Flutter Ratio - Weight %s', weight_no))
 % plot(y_L, Uf/Uf(1), '-', 'DisplayName', 'Computed (k-method)', 'LineWidth', 2)
 % hold on
-% plot(Span_7e, Uf_7e/Uf_7e(1), 'o', ...
+% plot(Span_7e, Uf_7e/Uf_7e(1), '^', ...
 %      'DisplayName', 'Exp. Data - Weight 7', ...
 %      'MarkerEdgeColor', [0.87 0.33 0], ...
-%      'LineWidth', 1.5)
-% Uf_7e_smooth = spline(Span_7e, Uf_7e/Uf_7e(1), y_L);
-% plot(y_L, Uf_7e_smooth, '-', ...
-%     'LineWidth', 1.5, ...
-%     'DisplayName', 'Best Fit - Weight 5', ...
+%      'LineWidth', 1.5, 'MarkerSize', 10)
+% p = polyfit(Span_7e, Uf_7e/Uf_7e(1), 5); Uf_7e_bestfit = polyval(p, y_L);
+% plot(y_L, Uf_7e_bestfit, '-', ...
+%     'LineWidth', 1.75, ...
+%     'DisplayName', 'Best Fit Curve - Weight 5', ...
 %     'Color', [0.87 0.33 0])
-% xlabel('Dimensionless Spanwise Position (y/L)')
-% ylabel('Flutter Speed Ratio (U_w / U_0)')
+% xlabel('y/L', 'FontSize', 15)
+% ylabel('$\biggl(\frac{U_w}{U_{F0}}\biggr)$', ...
+%        'Interpreter', 'latex', 'FontSize', 15, 'Rotation', 0)
 % title('Validation against NACA TN 1594 - Weight 7e')
+% set(gca, 'FontName', 'helvetica')
 % xlim([0 1])
-% legend show 
+% legend('FontSize', 10)
 % grid on
 % grid minor
 
@@ -199,12 +209,12 @@ for ii=1:150
     Ls=(int_pos-1).*(L/100);
     % Calculate Theodorsen function
     C_theo = besselk(1, (1j*k))./(besselk(0, (1j*k)) + besselk(1, 1j*k)) ;
-    % Calculate Deta, Delta, B,C,D and T matrices
-    
+
     % set up functions for bending 
     y_L = 0:0.01:1 ;
     N = 3 ;
     M = 2 ;
+    
     % calculate Delta, Deltas, B, C, D and T matrices setup functions for bending, 3 bending and 2 torsion modes 
     for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
@@ -220,6 +230,7 @@ for ii=1:150
            B(i,j) = (L-0)*trapz(y_L,psi_i_double.*psi_j_double) ;   
         end
     end
+    
     % setup i and j torsion for wing and store, 2 torsion modes
     for i=1:M
         phi_i = (y_L).^i ;                                          % ith torsional function for wing
@@ -235,6 +246,7 @@ for ii=1:150
             T(i,j) = (L-0)*trapz(y_L, phi_i_single.*phi_j_single) ;     % T matrix
         end
     end
+    
     % Define functions for i bending and j torsion to determine C matrix
     for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
@@ -280,6 +292,7 @@ K = [    EI*B,      zeros(N,M)  ;
     % calculate corresponding speed
     U(:,ii) = (omega(:, ii).*b)/k ;                             % flutter occurs at zero damping
 end
+
 
 % plots 
 figure('Name', sprintf('Minimum Flutter - Weight %s', weight_no))

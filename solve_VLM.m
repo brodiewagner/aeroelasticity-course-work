@@ -1,7 +1,7 @@
-function [Li, Cltot] = solve_VLM(alpha_vector, Vinf, rho, S, NP, A, B, C, n, DY, L)
+function [Li, Cltot] = solve_VLM(alpha_vector, Vinf, rho, S, NP_v, A, B, C, n, DY, L)
     
-     for j = 1:NP
-        for k = 1:NP
+     for j = 1:NP_v
+        for k = 1:NP_v
             VAB = V_AB(A(:,k),B(:,k),C(:,j)) ;
             VAI = VA_INF(A(:,k),C(:,j)) ;
             VBI = VB_INF(B(:,k),C(:,j)) ;
@@ -14,10 +14,10 @@ function [Li, Cltot] = solve_VLM(alpha_vector, Vinf, rho, S, NP, A, B, C, n, DY,
     AICz = squeeze(AIC(:,:,3)) ;    % z component of downwash
     
     % aerodynamic influence coefficient matrix projection of V on n
-    AIC_mat = zeros(NP, NP) ;
+    AIC_mat = zeros(NP_v, NP_v) ;
     
-    for i = 1:NP
-        for j = 1:NP
+    for i = 1:NP_v
+        for j = 1:NP_v
             AIC_mat(i,j) = n(1,j)*AICx(i,j) + n(2,j)*AICy(i,j) + n(3,j)*AICz(i,j) ;     % this is just a dot product
         end
     end

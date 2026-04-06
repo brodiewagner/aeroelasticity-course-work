@@ -25,19 +25,33 @@
 %   Values for Lift Coefficient are a little low at the root
 %       - Unsure why
 %   Trim converges at a slightly lower value than expected 
-%       - results  = ~ 8
-%       - expected = ~ 10
+%       - results: alpha = ~ 8
+%       - expected: alpha = ~ 10
 % ==========================================================================================================================
 
 clear
 clc
+% close all
 
-%% WING PLANFORM PARAMETERS
+%% Initialise Variables
+% WING PLANFORM PARAMETERS
 cr = 1.5 ;          % root chord (m)
-lambda = 0.4 ;      % taper ratio, ct/cr
+lambda = 0.4 ;      % taper ratio  ct/cr
 L = 6 ;             % semi-span (m)
 e = 0.25 ;          % elastic axis offset aft of quarter-chord (x chords)
 LAM = 0 ;           % half-chord sweep angle (degrees)
+
+%  FLIGHT CONDITIONS
+mg = 10e3*9.81 ;            % aircraft weight (N)  
+Vinf = 150 ;                % airspeed (m/s)
+rho = 0.5238*1.225 ;        % air density at ~20 000 ft (kg/m^3)
+qinf = 0.5*rho*Vinf^2 ;     % dynamic pressure (Pa)
+
+%  STRUCTURAL 
+EI = 2e6 ;          % bending stiffness (N·m^2)
+GJ = 5e5 ;          % torsional stiffness (N·m^2/rad)
+N = 3 ;             % number of bending polynomial modes
+M = 2 ;             % number of torsion polynomial modes
 
 %% STRUCTURAL MESH (half-span, NP_s stations)
 NP_s = 50 ;                         % half-span structural panels (keep even)
@@ -47,6 +61,9 @@ c_Y = cr*(1 - lambda*y_L) ;         % chord distribution along half-span
 dy = DY_s*L ;                       % physical panel span (m)
 S = trapz(c_Y)*dy*2 ;               % wing reference area (trapz, both wings)
 AR = (2*L)^2/S ;                    % aspect ratio
+
+% Structural stiffness matrix 
+E_stiff = stiffness_matrix(N, M, EI, GJ, L, y_L) ;
 
 %%  VLM MESH (full-span, NP_v panels)
 % The VLM functions expect NP panels spanning tip-to-tip with y/L running from -1 to +1. NP_v MUST be even.
@@ -76,7 +93,7 @@ Cy = 0.5*(A(2,:) + B(2,:)) ;
 Cx = interp1(y_L_v, x_3qc, Cy/L) ;
 C = [Cx; Cy; 0*Cy] ;
 
-% Panel unit normals (flat wing -> purely z-direction, but computed properly so code generalises to cambered/dihedral cases)
+% Panel unit normals 
 n_v = zeros(3, NP_v) ;
 for k = 1:NP_v
     nk = cross(A(:,k) - C(:,k), A(:,k) - B(:,k)) ;
@@ -84,21 +101,6 @@ for k = 1:NP_v
 end
 
 fprintf('VLM mesh built: %d full-span panels  (NP_s=%d half-span structural panels)\n', NP_v, NP_s);
-
-%%  FLIGHT CONDITIONS
-mg = 10e3*9.81 ;            % aircraft weight (N)  
-Vinf = 150 ;                % airspeed (m/s)
-rho = 0.5238*1.225 ;        % air density at ~20 000 ft (kg/m^3)
-qinf = 0.5*rho*Vinf^2 ;     % dynamic pressure (Pa)
-
-%%  STRUCTURAL MODEL
-EI = 2e6 ;          % bending stiffness (N·m^2)
-GJ = 5e5 ;          % torsional stiffness (N·m^2/rad)
-N = 3 ;             % number of bending polynomial modes
-M = 2 ;             % number of torsion polynomial modes
-
-% Structural stiffness matrix 
-E_stiff = stiffness_matrix(N, M, EI, GJ, L, y_L) ;
 
 tic
 %%  INITIAL TRIM ESTIMATE (use strip theory once for step 1 seed)
@@ -133,15 +135,15 @@ for ii = 1:M
     F(ii+N) = trapz(y_L, Mi_s.*phi_i(ii,:))*L ;
 end
 
-%% STEP 3 – Structural solve
+%% Structural solve
 eta = E_stiff\F ;
 theta = phi_i'*eta(N+1:N+M) ;           % (NP_s+1) x 1 torsion
 wd = psi_id'*eta(1:N) ;                 % (NP_s+1) x 1 bending slope
 
-%% STEP 4 – Elastic angle of attack (half-span)
+%% Elastic angle of attack (half-span)
 alphae_half = alpha(trimstep) + theta*cosd(LAM) - wd*sind(LAM) ;        % (NP_s+1) x 1
 
-%%  STEP 5 – First VLM call with elastic alpha
+%%  First VLM call with elastic alpha
 % Mirror alphae onto full span: port wing is symmetric
 %   Full-span panels 1..NP_v/2 = port(y < 0), mirrored from starboard
 %   Full-span panels NP_v/2+1..NP_v = starboard (y > 0)
@@ -232,7 +234,6 @@ CL_norm = (CL_y/CL_total)' ;            % normalised
 
 toc
 %%  PLOTS
-
 % wing geometry plotting
 figure('Name', 'Wing')
 title(sprintf('Wing Profile (LAM = %.0f)', LAM), 'FontSize', 14)
@@ -257,8 +258,8 @@ figure('Name','Spanwise Lift Coefficient (VLM elastic)')
 hold on 
 grid on
 grid minor
-plot(y_L, CL_y, 'o',  'LineWidth', 2, 'DisplayName','CL (elastic VLM)', 'Color', [0 0.427 0.831])
-plot(y_L, CL_norm, 'o',  'LineWidth', 2, 'DisplayName', 'CL/CL_{total} (normalised)', 'Color', [0.286 0.678 0])
+plot(y_L, CL_y, '-o',  'LineWidth', 2, 'DisplayName','CL (elastic VLM)', 'Color', [0 0.427 0.831])
+plot(y_L, CL_norm, '-o',  'LineWidth', 2, 'DisplayName', 'CL/CL_{total} (normalised)', 'Color', [0.286 0.678 0])
 plot(y_L, CL_y_R, '--r', 'LineWidth', 1.5, 'DisplayName','CL (rigid strip theory seed)')
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Lift coefficient C_L', 'FontSize', 14)
@@ -270,7 +271,7 @@ figure('Name','Elastic Angle of Attack')
 hold on 
 grid on
 grid minor
-plot(y_L, alphae_half*180/pi, 'ob', 'LineWidth', 2)
+plot(y_L, alphae_half*180/pi, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Aeroelastic angle (deg)', 'FontSize', 14)
 title('Spanwise Elastic Angle of Attack', 'FontSize', 14)
@@ -280,7 +281,7 @@ figure('Name','Trim Convergence')
 hold on
 grid on
 grid minor
-plot(alpha*180/pi, 'ob', 'LineWidth', 2)
+plot(alpha*180/pi, '-o', 'LineWidth', 2)
 xlabel('Iteration', 'FontSize', 14)
 ylabel('Root pitch angle (deg)', 'FontSize', 14)
 title('Trim Convergence History', 'FontSize', 14)
@@ -291,7 +292,7 @@ figure('Name','Torsion Distribution')
 hold on 
 grid on
 grid minor
-plot(y_L, theta*180/pi, 'ob', 'LineWidth', 2)
+plot(y_L, theta*180/pi, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Torsion angle (deg)', 'FontSize', 14)
 title('Spanwise Torsion Distribution', 'FontSize', 14)
@@ -301,7 +302,7 @@ figure('Name','Bending Slope Distribution')
 hold on 
 grid on
 grid minor
-plot(y_L, wd, 'ob', 'LineWidth', 2)
+plot(y_L, wd, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Bending slope dw/dy (m)', 'FontSize', 14)
 title('Spanwise Bending Slope Distribution', 'FontSize', 14)
@@ -311,7 +312,7 @@ figure('Name','Spanwise Loading (VLM elastic)')
 hold on 
 grid on
 grid minor
-plot(y_L, Li_s, 'ob', 'LineWidth', 2)
+plot(y_L, Li_s, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Local lift L_i (N)', 'FontSize', 14)
 title('Spanwise Load Distribution – Elastic Wing (VLM)', 'FontSize', 14)

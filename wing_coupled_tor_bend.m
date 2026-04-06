@@ -1,5 +1,6 @@
 clc
 clear
+close all
 
 %%
 % wing parameters
@@ -27,16 +28,16 @@ x = xs*b ;
     Ls = (int_pos-1).*(L/100) ;
     % calculate Delta, Deltas, B, C, D and T matrices.
     % setup functions for bending, 3 bending and 2 torsion modes
-    y_L = 0:0.01:1 ;
-    N = 3 ;                                                      % assume as a first test the bending 
-    M = 2 ;                                                      % and torsion modes
+    y_L = 0:0.1:1 ;
+    N = 5 ;                                                      % assume as a first test the bending 
+    M = 6 ;                                                      % and torsion modes
 
     for i=1:N
         psi_i = (y_L).^(i+1) ;                                      % ith bending function for wing
         psi_i_store = (Ls/L).^(i+1) ;                               % ith bending funtion for store
         psi_i_double = ((i*(i+1))/L.^2).*((y_L).^(i-1)) ;           % ith bending function second derivative (psi'')
         for j = 1:N
-           psi_j = (y_L).^(j+1) ;                                   % jth bedning function of wing
+           psi_j = (y_L).^(j+1) ;                                   % jth bending function of wing
            psi_j_store = (Ls/L).^(j+1) ;                            % jth bending mode of store
            psi_j_double = ((j*(j+1))/L.^2).*((y_L).^(j-1)) ;        % jth wing bending function second derivative (psi'') 
            % Del, Dels and B matrices
@@ -109,9 +110,9 @@ end
     %Deflection and twist of the elastic axis create 11 store positions along span
     y_L=0:0.1:1;
     % select mode
-    mode = 1 ;
+    mode = 2 ;
     % select store position
-    store_pos = 1 ;
+    store_pos = 2 ;
     EA_z = zeros(1,length(y_L)) ;
     theta_EA = zeros(1,length(y_L)) ;
     % Determine the amount of bending
@@ -151,7 +152,7 @@ end
     z_EA = EA_z;
 
 %% Experimental Data
-
+%          y/l      f_b1   f_b2   f_t
 data = [
     0,     0,        6.45, 39.2   47.3    ;
     0,     0,        6.43, 39.2   39.2    ;
@@ -199,7 +200,7 @@ std_T  = accumarray(idx, exp_T,  [], @std);
 
 %% 3D PLOT --------------------------------------------------------------------------------------------------------------
 
-    figure;
+    figure('name', '3D visualisation of Wing');
     hold on;
     grid on;
     view(-35, 300) ;                  % Sets the 3D viewing angle to match your reference image
@@ -260,44 +261,45 @@ std_T  = accumarray(idx, exp_T,  [], @std);
     hold off;
 
 %% 2D Frequency plot 
+% 
+% % sort frequencies at every spanwise station from lowest to highest
+% f_sorted = sort(f, 1);          % ensures F1 is always the lowest line, F2 is the middle, etc
+% 
+% % create x-axis array for computed lines 
+% x_span = 0:0.01:1;
+% 
+% figure('Name', 'Nat. Freq. for first 3 modes');
+% hold on;
+% 
+% % plot the computed lines (rows 1, 2, and 3 of f_sorted)
+% plot(x_span, f_sorted(1,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed B1');  
+% plot(x_span, f_sorted(2,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed B2');  
+% plot(x_span, f_sorted(3,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed T1');  
+% 
+% % Plot the experimental data markers with ERROR BARS
+% % Syntax: errorbar(x, y, error, 'LineStyle', 'none', 'Marker', ...)
+% errorbar(unique_yL, mean_B1, std_B1, '^k', 'MarkerSize', 15, 'LineWidth', 1, 'DisplayName', 'Experimental B1');
+% errorbar(unique_yL, mean_B2, std_B2, 'ok', 'MarkerSize', 15, 'LineWidth', 1, 'DisplayName', 'Experimental B2');
+% errorbar(unique_yL, mean_T, std_T, 'sk', 'MarkerSize', 15, 'LineWidth', 1, 'DisplayName', 'Experimental T1');
+% 
+% % figure formatting 
+% xlabel('Store position (y/L)', 'FontSize', 16);
+% ylabel('Frequency [Hz]', 'FontSize', 16);
+% 
+% % title based on selected N and M values
+% title_str = sprintf('First 3 modal frequencies vs Store Position (N = %d, M = %d)', N, M) ;
+% title(title_str, 'FontSize', 18, 'FontWeight', 'bold');
+% 
+% % axis limits
+% xlim([-0.01 1]);
+% ylim([0 50]);
+% 
+% grid on
+% grid minor
+% legend('Location', 'northeast', 'FontSize', 15, "Position", [0.8388 0.7589 0.1555 0.2167]);
+% 
+% % clean up the axes 
+% box off;
+% set(gca, 'FontSize', 20, 'TickDir', 'in');
+% hold off;
 
-% sort frequencies at every spanwise station from lowest to highest
-f_sorted = sort(f, 1);          % ensures F1 is always the lowest line, F2 is the middle, etc
-
-% create x-axis array for computed lines 
-x_span = 0:0.01:1;
-
-figure;
-hold on;
-
-% plot the computed lines (rows 1, 2, and 3 of f_sorted)
-plot(x_span, f_sorted(1,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F1');   % Solid
-plot(x_span, f_sorted(2,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F2');  % Dashed
-plot(x_span, f_sorted(3,:), '-', 'LineWidth', 2.5, 'DisplayName', 'Computed F3');  % Dash-Dot
-
-% Plot the experimental data markers with ERROR BARS
-% Syntax: errorbar(x, y, error, 'LineStyle', 'none', 'Marker', ...)
-errorbar(unique_yL, mean_B1, std_B1, '^k', 'MarkerSize', 10, 'LineWidth', 1, 'DisplayName', 'Experimental 1B');
-errorbar(unique_yL, mean_B2, std_B2, 'ok', 'MarkerSize', 10, 'LineWidth', 1, 'DisplayName', 'Experimental 2B');
-errorbar(unique_yL, mean_T, std_T, 'sk', 'MarkerSize', 10, 'LineWidth', 1, 'DisplayName', 'Experimental 1T');
-
-% figure formatting 
-xlabel('Store position (y/L)', 'FontSize', 16);
-ylabel('Frequency [Hz]', 'FontSize', 16);
-
-% title based on selected N and M values
-title_str = sprintf('First 3 modal frequencies vs Store Position (N = %d, M = %d)', N, M) ;
-title(title_str, 'FontSize', 18, 'FontWeight', 'bold');
-
-% axis limits
-xlim([0 1]);
-ylim([0 50]);
-
-grid on
-grid minor
-legend('Location', 'northeast', 'FontSize', 12, "Position", [0.8118 0.7876 0.1616, 0.1796]);
-
-% clean up the axes 
-box off;
-set(gca, 'FontSize', 12, 'TickDir', 'in');
-hold off;

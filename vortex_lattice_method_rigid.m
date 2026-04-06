@@ -17,7 +17,7 @@ adeg = 6 ;              % root angle of attack degrees
 alpha = adeg*pi/180 ;   % root angle of attack in radians
 
 % numerical conditions
-NP = 100 ;              % spanwise panels for vortex lattice, MUST BE EVEN!
+NP = 60 ;              % spanwise panels for vortex lattice, MUST BE EVEN!
 
 % mesh the wing into NP panels and plot it out
 DY = 2/(NP) ;                           % non dimensional panel span
@@ -103,6 +103,31 @@ end
 
 %% Plotting 
 
+% aft sweep
+xa = [0.017; 0.064; 0.108; 0.152; 0.200; 0.244; 0.291; 0.335; 0.379; 0.427; ...
+     0.471; 0.517; 0.563; 0.609; 0.653; 0.698; 0.745; 0.788; 0.836; 0.882; ...
+     0.927; 0.975];
+ya = [0.799; 0.830; 0.857; 0.888; 0.915; 0.947; 0.974; 0.999; 1.032; 1.055; ...
+     1.086; 1.110; 1.135; 1.154; 1.172; 1.187; 1.189; 1.185; 1.157; 1.095; ...
+     0.972; 0.726];
+
+% % unswept
+% x0 = [0.020; 0.063; 0.108; 0.155; 0.197; 0.246; 0.291; 0.335; 0.384; 0.426; ...
+%      0.474; 0.519; 0.566; 0.609; 0.654; 0.701; 0.745; 0.793; 0.838; 0.882; ...
+%      0.931; 0.976];
+% % unswept
+% y0 = [0.873; 0.902; 0.924; 0.941; 0.968; 0.987; 1.009; 1.026; 1.046; 1.067; ...
+%      1.075; 1.096; 1.102; 1.115; 1.115; 1.115; 1.101; 1.081; 1.036; 0.962; ...
+%      0.847; 0.624];
+
+% % fore sweep
+% xf = [0.019; 0.063; 0.107; 0.155; 0.199; 0.245; 0.290; 0.335; 0.384; 0.426; ...
+%      0.474; 0.519; 0.566; 0.610; 0.653; 0.702; 0.745; 0.794; 0.841; 0.883; ...
+%      0.931; 0.977];
+% yf = [0.961; 0.988; 1.004; 1.025; 1.040; 1.050; 1.065; 1.071; 1.069; 1.075; ...
+%      1.071; 1.063; 1.057; 1.043; 1.029; 1.007; 0.978; 0.939; 0.890; 0.820; ...
+%      0.700; 0.515];
+
 % wing geometry plotting
 figure('Name', 'Warren-12 wing')
 title('Warren-12 wing', 'FontSize', 14, 'FontWeight', 'bold')
@@ -126,9 +151,11 @@ figure('Name', 'Lift distribution for Warren-12 wing')
 title('Span-wise Lift Coefficient for the Warren-12 wing', 'FontSize', 14, 'FontWeight', 'Bold')
 hold on
 grid on
-plot (Cy((NP/2 + 1):NP),Cl((NP/2 + 1):NP)/Cltot, '-o', 'LineWidth', 2) ;
-xlabel ('Span-wise position (-)', 'FontSize', 16) ;
+plot ((Cy((NP/2 + 1):NP))/L,Cl((NP/2 + 1):NP)/Cltot, '-o', 'LineWidth', 2) ;
+plot(xa, ya, '-.o', 'LineWidth', 2)
+xlabel ('Span-wise position (y/L)', 'FontSize', 16) ;
 ylabel ('Cl/Cl_{TOTAL}', 'FontSize', 16) ;
+ylim([0 1.4])
 
 % plot out CL/CL_total to show spanwise lift coefft distribution
 figure('Name', 'Loading for Warren-12 wing')
@@ -138,4 +165,3 @@ grid on
 plot (Cy((NP/2 + 1):NP),Li((NP/2 + 1):NP), '-o', 'LineWidth', 2) ;
 xlabel ('Span-wise position (-)', 'FontSize', 16) ;
 ylabel ('Loading, $L_i$', 'FontSize', 16, 'Interpreter','latex') ;
-
