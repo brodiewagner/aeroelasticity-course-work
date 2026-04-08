@@ -108,7 +108,7 @@ K = [    EI*B,      zeros(N,M)  ;
     Mt = Mwing + Mstore ;
    
 % Divergence and Flutter (k-method)
-for ii = 1:150
+for ii = 1:1:150
     k = ii*0.01;
     % Calculate Theodorsen function
     C_theo = besselk(1,(1j*k))./(besselk(0,(1j*k)) + besselk(1,1j*k)) ;
@@ -204,7 +204,7 @@ grid minor
 
 % Determine the store position for minimum flutter speed
 int_pos=find(Uf==min(Uf));
-for ii=1:150
+for ii=1:1:150
     k=ii*0.01;
     Ls=(int_pos-1).*(L/100);
     % Calculate Theodorsen function

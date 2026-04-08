@@ -1,12 +1,13 @@
 clear
 clc
+close all 
 
 %% WING PLANFORM PARAMETERS
 c = 1.5 ;           % root chord (m)
 lambda = 0.4 ;      % taper ratio  ct/cr
 L = 6 ;             % semi-span (m)
 e = 0.25 ;          % elastic axis offset aft of quarter-chord (x chords)
-LAM = 45 ;          % half-chord sweep angle (degrees)
+LAM = 0 ;          % half-chord sweep angle (degrees)
 
 %%  FLIGHT CONDITIONS
 mg = 10e3*9.81 ;            % aircraft weight (N)  
@@ -17,8 +18,8 @@ qinf = 0.5*rho*Vinf^2 ;     % dynamic pressure (Pa)
 %%  STRUCTURAL MODEL
 EI = 2e6 ;  % bending stiffness (N·m^2)
 GJ = 5e5 ;  % torsional stiffness (N·m^2/rad)
-N = 4 ;     % number of bending polynomial modes
-M = 6 ;     % number of torsion polynomial modes
+N = 2 ;     % number of bending polynomial modes
+M = 3 ;     % number of torsion polynomial modes
 
 %% STRUCTURAL MESH  (half-span, NP_s stations)
 NP_s = 50 ;                         % half-span structural panels (keep even)
@@ -129,7 +130,7 @@ alphae_panels = 0.5*(alphae_half(1:end-1) + alphae_half(2:end)) ;       % NP_s x
 alphae_full = [flip(alphae_panels); alphae_panels]' ;                  % 1 x NP_v  row vector
 
 % VLM call
-[Li_vlm, Cltot] = solve_VLM(alphae_full, Vinf, rho, S, NP_v, A_v, B_v, C_v, n_v, DY_v, L) ;
+[Li_vlm] = solve_VLM(alphae_full, Vinf, rho, S, NP_v, A_v, B_v, C_v, n_v, DY_v, L) ;
 Li_vlm = Li_vlm(:)' ;           % force 1 x NP row vector
 
 % Extract starboard half-span lift (panels NP_v/2+1 : NP_v)
@@ -144,7 +145,7 @@ fprintf('Step %i | Ltot = %.1f N | mg = %.1f N | error = %.1f N | alpha = %.4f r
         trimstep, Ltot, mg, Ltot-mg, alpha(trimstep)) ;
 
 %%  TRIM LOOP (Steps 6–8)
-for trimstep = 2:300
+for trimstep = 2:500
 
     % STEP 6: update elastic AoA from previous structural state 
     alphae_half = alpha(trimstep-1) + theta*cosd(LAM) - wd*sind(LAM) ; % (NP_s+1) x 1
@@ -154,7 +155,7 @@ for trimstep = 2:300
     alphae_full   = [flip(alphae_panels) ; alphae_panels]' ;
 
     % VLM solve (3-D, accounts for sweep/taper/twist effects) 
-    [Li_vlm, Cltot] = solve_VLM(alphae_full, Vinf, rho, S, NP_v, A_v, B_v, C_v, n_v, DY_v, L) ;
+    [Li_vlm] = solve_VLM(alphae_full, Vinf, rho, S, NP_v, A_v, B_v, C_v, n_v, DY_v, L) ;
 
     % Starboard half only
     Li_star = Li_vlm(NP_v/2+1 : NP_v)/dy ;
@@ -192,7 +193,7 @@ for trimstep = 2:300
     wd    = psi_id' * eta(1:N)     ;
 
     % Convergence check: within 0.05% of weight
-    if abs(L_over) < mg*0.0005
+    if abs(L_over) < mg*0.005
         fprintf('\nConverged at trim step %i\n', trimstep) ;
         break
     end
@@ -209,7 +210,7 @@ CL_norm = (CL_y/CL_total)' ;            % normalised
 
 toc
 %%  PLOTS
-close all ;
+% close all ;
 % wing geometry plotting
 figure('Name', 'Wing')
 title(sprintf('Wing Profile (LAM = %.0f)', LAM), 'FontSize', 14)
@@ -229,31 +230,22 @@ plot3(B_v(1,:), B_v(2,:), B_v(3,:),'r+')
 plot3(C_v(1,:), C_v(2,:), C_v(3,:),'go')
 hold off
 
-%
-figure('Name','Spanwise Lift Coefficient (VLM elastic)')
-hold on ; 
-grid on ;
-plot(y_L, CL_norm, 'og',  'LineWidth', 2, 'DisplayName','CL/CL_{total} (normalised)')
-xlabel('Dimensionless span (y/L)', 'FontSize', 14)
-ylabel('Lift coefficient C_L', 'FontSize', 14)
-title('Spanwise Lift Coefficient – Elastic Wing (VLM)', 'FontSize', 14)
-legend('Location','southwest', 'FontSize', 11)
-
 % Spanwise lift coefficient 
-figure('Name','Spanwise Lift Coefficient (VLM elastic)')
+figure('Name','Warren-12 Spanwise Lift Coefficient (VLM elastic)')
 hold on ; grid on
-plot(y_L, CL_y, 'ob',  'LineWidth', 2, 'DisplayName','CL (elastic VLM)')
-plot(y_L, CL_norm, 'og',  'LineWidth', 2, 'DisplayName','CL/CL_{total} (normalised)')
+plot(y_L, CL_y, '-o',  'LineWidth', 2, 'DisplayName','CL (elastic VLM)')
+plot(y_L, CL_norm, '-o',  'LineWidth', 2, 'DisplayName','CL/CL_{total} (normalised)', 'Color', [0.286 0.678 0])
 plot(y_L, CL_y_R, '--r', 'LineWidth', 1.5, 'DisplayName','CL (rigid strip theory seed)')
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Lift coefficient C_L', 'FontSize', 14)
-title('Spanwise Lift Coefficient – Elastic Wing (VLM)', 'FontSize', 14)
+title('Spanwise Lift Coefficient – Elastic Warren-12 Wing', 'FontSize', 20)
 legend('Location','southwest', 'FontSize', 11)
+ylim([0 1.4])
 
 % Elastic angle of attack
 figure('Name','Elastic Angle of Attack')
 hold on ; grid on
-plot(y_L, alphae_half*180/pi, 'o', 'LineWidth', 2)
+plot(y_L, alphae_half*180/pi, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Aeroelastic angle (deg)', 'FontSize', 14)
 title('Spanwise Elastic Angle of Attack', 'FontSize', 14)
@@ -261,15 +253,16 @@ title('Spanwise Elastic Angle of Attack', 'FontSize', 14)
 % Trim convergence 
 figure('Name','Trim Convergence')
 hold on ; grid on
-plot(alpha*180/pi, 'o', 'LineWidth', 2)
+plot(alpha*180/pi, '-o', 'LineWidth', 2)
 xlabel('Iteration', 'FontSize', 14)
 ylabel('Root pitch angle (deg)', 'FontSize', 14)
 title('Trim Convergence History', 'FontSize', 14)
+xlim([0, max(trimstep)])
 
 % Torsion angle 
 figure('Name','Torsion Distribution')
 hold on ; grid on
-plot(y_L, theta*180/pi, 'o', 'LineWidth', 2)
+plot(y_L, theta*180/pi, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Torsion angle (deg)', 'FontSize', 14)
 title('Spanwise Torsion Distribution', 'FontSize', 14)
@@ -277,7 +270,7 @@ title('Spanwise Torsion Distribution', 'FontSize', 14)
 % Bending slope 
 figure('Name','Bending Slope Distribution')
 hold on ; grid on
-plot(y_L, wd, 'o', 'LineWidth', 2)
+plot(y_L, wd, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Bending slope dw/dy (m)', 'FontSize', 14)
 title('Spanwise Bending Slope Distribution', 'FontSize', 14)
@@ -285,7 +278,7 @@ title('Spanwise Bending Slope Distribution', 'FontSize', 14)
 % Spanwise loading Li 
 figure('Name','Spanwise Loading (VLM elastic)')
 hold on ; grid on
-plot(y_L, Li_s, 'o', 'LineWidth', 2)
+plot(y_L, Li_s, '-o', 'LineWidth', 2)
 xlabel('Dimensionless span (y/L)', 'FontSize', 14)
 ylabel('Local lift L_i (N)', 'FontSize', 14)
 title('Spanwise Load Distribution – Elastic Wing (VLM)', 'FontSize', 14)

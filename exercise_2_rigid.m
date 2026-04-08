@@ -7,7 +7,7 @@ L = 6 ;            % Semi span
 e = 0.25 ;         % Elastic axis location relative to quarter chord
 LAM = 25 ;         % sweep in degrees
 
-% Meshing part
+% meshing
 NP=100; % Number of panels
 DY=2/(NP); % Dimensionless panel span
 y_L=0:DY:1; % Panel position along one wing

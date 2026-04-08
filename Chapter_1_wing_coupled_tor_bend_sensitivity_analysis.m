@@ -24,38 +24,34 @@ Is = 1.91*Iwing*L ;                % pitch inertia of store about centre , kg m^
 x = xs*b ;
 
 %% senstivity analysis
-disp('Running 2D Sensitivity Analysis (Varying N and M)...')
 
-% 1. Set our test condition: Store at 11 inches (11/47 * L = 0.234043 * L)
 Ls_test = 0.234043 * L; 
 y_L_int = 0:0.01:1; % Integration vector for trapz
 
-% Experimental Data from NACA TN 1594 (Table II, Run 9, Weight 4 at 11 inches)
-f1B_exp = 6.41;  % 1st Bending [Hz]
-f2B_exp = 30.95; % 2nd Bending [Hz]
-f1T_exp = 40.24; % 1st Torsion [Hz]
+% experimental data 
+f1B_exp = 6.41;  
+f2B_exp = 30.95; 
+f1T_exp = 40.24; 
 
-% 2. We will test N and M from 1 to 8
-N_values = 1:8;
-M_values = 1:8;
+% N and M from 1 to 8
+N_values = 1:12;
+M_values = 1:12;
 
-% Matrices to store results (rows = N values, cols = M values)
+% store results 
 freq_results_1 = zeros(length(N_values), length(M_values));
 freq_results_2 = zeros(length(N_values), length(M_values));
 freq_results_3 = zeros(length(N_values), length(M_values));
 
-% Nested loops to evaluate every combination of N and M
+% nested loops evaluate every combination 
 for n_idx = 1:length(N_values)
     for m_idx = 1:length(M_values)
         N_test = N_values(n_idx);
         M_test = M_values(m_idx);
         
-        % Initialize matrices for this loop
         Del = zeros(N_test,N_test); Dels = zeros(N_test,N_test); B = zeros(N_test,N_test);
         D = zeros(M_test,M_test); D_s = zeros(M_test,M_test); T = zeros(M_test,M_test);
         C = zeros(N_test,M_test); C_s = zeros(N_test,M_test);
         
-        % Build Bending Matrices
         for i=1:N_test
             psi_i = (y_L_int).^(i+1); 
             psi_i_store = (Ls_test/L).^(i+1); 
@@ -71,7 +67,6 @@ for n_idx = 1:length(N_values)
             end
         end
         
-        % Build Torsion Matrices
         for i=1:M_test
             phi_i = (y_L_int).^i; 
             phi_i_store = (Ls_test/L).^i; 
@@ -87,7 +82,6 @@ for n_idx = 1:length(N_values)
             end
         end
         
-        % Build Coupled Matrices
         for i=1:N_test
             psi_i = (y_L_int).^(i+1); 
             psi_i_store = (Ls_test/L).^(i+1); 
@@ -100,42 +94,27 @@ for n_idx = 1:length(N_values)
             end
         end
         
-        % Assemble Global Matrices
         Mwing_test = [mbar*Del, -mbar*x_b*C; -mbar*x_b*(C'), Iwing*D];
         Mstore_test = [ms*Dels, ms*x*C_s; ms*x*(C_s'), Is*D_s];
         Mt_test = Mwing_test + Mstore_test;
         K_test = [EI*B, zeros(N_test,M_test); zeros(M_test,N_test), GJ*T];
         
-        % Solve Eigenvalue Problem
         [~, Lambda_test] = eig(K_test, Mt_test);
         f_hz = real(sqrt(diag(Lambda_test))) / (2*pi); % Keep real part for stability
         f_sorted = sort(f_hz); 
         
-        % Safety check: Pad f_sorted with NaNs if it has fewer than 3 elements
-        % (This happens when N+M < 3, e.g., N=1 and M=1)
         f_padded = [f_sorted; NaN(max(0, 3 - length(f_sorted)), 1)];
         
-        % Store first 3 modes safely
         freq_results_1(n_idx, m_idx) = f_padded(1);
         freq_results_2(n_idx, m_idx) = f_padded(2);
         freq_results_3(n_idx, m_idx) = f_padded(3);
     end
 end
 
-%% 3. Plot the 2D Sensitivity Results
+%% plots
 [M_grid, N_grid] = meshgrid(M_values, N_values);
 
-% % --- Subplot 1: First Mode ---
-% figure('Name', 'N and M Convergence vs Experimental Data', 'Position', [100, 100, 1400, 450]);
-% surf(M_grid, N_grid, freq_results_1, 'FaceAlpha', 0.8); 
-% hold on;
-% % Plot Experimental Plane
-% surf(M_grid, N_grid, f1B_exp*ones(size(freq_results_1)), 'FaceColor', 'r', 'FaceAlpha', 0.4, 'EdgeColor', 'none');
-% title('Computed Mode 1 vs. Exp 1st Bending', 'FontSize', 12);
-% xlabel('Torsional Polynomials (M)'); ylabel('Bending Polynomials (N)'); zlabel('Frequency [Hz]');
-% view(-45, 30); grid on;
-
-% --- Subplot 2: Second Mode ---
+% second mode 
 figure('Name', 'N and M Convergence vs Experimental Data', 'Position', [100, 100, 1400, 450]);
 surf(M_grid, N_grid, freq_results_2, 'FaceAlpha', 0.75); 
 hold on;
@@ -150,7 +129,7 @@ legend('Convergence', 'Experimental Data', 'fontsize', 15)
 set(gca, 'FontSize', 20);
 grid on;
 
-% % --- Subplot 3: Third Mode ---
+% third mode 
 figure('Name', 'N and M Convergence vs Experimental Data', 'Position', [100, 100, 1400, 450]);
 surf(M_grid, N_grid, freq_results_3, 'FaceAlpha', 0.75); 
 hold on;
@@ -164,5 +143,3 @@ view([133.5 25.0]);
 legend('Convergence', 'Experimental Data', 'fontsize', 15)
 set(gca, 'FontSize', 20);
 grid on;
-
-% sgtitle('Rayleigh-Ritz Convergence Sensitivity (Store Mass 4 @ 0.234 L)', 'FontSize', 16, 'FontWeight', 'bold');

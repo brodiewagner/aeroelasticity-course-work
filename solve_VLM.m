@@ -1,4 +1,4 @@
-function [Li, Cltot] = solve_VLM(alpha_vector, Vinf, rho, S, NP_v, A, B, C, n, DY, L)
+function [Li] = solve_VLM(alpha_vector, Vinf, rho, S, NP_v, A, B, C, n, DY, L)
     
      for j = 1:NP_v
         for k = 1:NP_v
@@ -31,8 +31,8 @@ function [Li, Cltot] = solve_VLM(alpha_vector, Vinf, rho, S, NP_v, A, B, C, n, D
     % compute local lift (Li)
     Li = rho*Vinf*gamma'.*(DY*L) ;   
     
-    % total lift coefficient
-    Ltot = sum(Li);
-    qinf = 0.5 * rho * Vinf^2;
-    Cltot = Ltot / (qinf * S);
+    % % total lift coefficient
+    % Ltot = sum(Li);
+    % qinf = 0.5 * rho * Vinf^2;
+    % Cltot = Ltot / (qinf * S);
 end

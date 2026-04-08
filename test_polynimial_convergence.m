@@ -1,31 +1,29 @@
-%% Convergence Study 
-% Fix store position at the tip for this test
+%% convergence study 
+% fix store position at the tip for test
 Ls = L; 
-xs = 0.625;         % Keep an eye on this sign based on our previous discussion!
+xs = 0.625;         
 x = xs * b;
 
-% Define the range of polynomial functions to test
-% Let's test N from 2 up to 8. We'll set M = N for simplicity.
-test_N_values = 2:8; 
+% range of polynomial functions 
+test_N_values = 2:10; 
 num_tests = length(test_N_values);
 
-% Arrays to hold the computed frequencies for each test
+% arrays to hold the computed frequencies for each test
 conv_F1 = zeros(1, num_tests);
 conv_F2 = zeros(1, num_tests);
 conv_T1 = zeros(1, num_tests);
 
 for k = 1:num_tests
     N = test_N_values(k);
-    M = N; % Using an equal number of bending and torsion modes 
+    M = N;                  % using an equal number of bending and torsion modes 
     
     y_L = 0:0.01:1;
     
-    % Initialize matrices to zero for this iteration size
+    % initialize matrices to zero for this iteration size
     Del = zeros(N, N); Dels = zeros(N, N); B = zeros(N, N);
     D = zeros(M, M); D_s = zeros(M, M); T = zeros(M, M);
     C = zeros(N, M); C_s = zeros(N, M);
     
-    % 1. Wing Bending Matrices (N x N)
     for i=1:N
         psi_i = (y_L).^(i+1);
         psi_i_store = (Ls/L).^(i+1);
@@ -41,7 +39,6 @@ for k = 1:num_tests
         end
     end
     
-    % 2. Wing Torsion Matrices (M x M)
     for i=1:M
         phi_i = (y_L).^i;
         phi_i_store = (Ls/L).^i;
@@ -57,7 +54,6 @@ for k = 1:num_tests
         end
     end
     
-    % 3. Coupling Matrices (N x M)
     for i=1:N
         psi_i = (y_L).^(i+1);
         psi_i_store = (Ls/L).^(i+1);
@@ -70,19 +66,16 @@ for k = 1:num_tests
         end
     end
 
-    % Construct Global Matrices
     Mwing = [ mbar*Del, -mbar*x_b*C ; -mbar*x_b*(C'), Iwing*D ];
     Mstore = [ ms*Dels, ms*xs*b*C_s ; ms*xs*b*(C_s'), Is*D_s ];
     K = [ EI*B, zeros(N,M) ; zeros(M,N), GJ*T ]; % Note: Fixed bottom-left zero matrix to (M,N)
     
     Mt = Mwing + Mstore;
 
-    % Solve Eigenvalue Problem
     [~, Lambda] = eig(K, Mt);
     omega = sqrt(diag(Lambda));
     freqs_hz = sort(omega / (2*pi)); % Sort to grab the lowest 3 modes reliably
     
-    % Store the lowest 3 frequencies
     conv_F1(k) = freqs_hz(1);
     conv_F2(k) = freqs_hz(2);
     conv_T1(k) = freqs_hz(3);
@@ -101,7 +94,6 @@ ylabel('Natural Frequency [Hz]', 'FontSize', 12);
 title('Convergence Study: Frequency vs. Polynomial Count', 'FontSize', 14, 'FontWeight', 'bold');
 legend('Mode 1 (1B)', 'Mode 2 (2B)', 'Mode 3 (1T)', 'Location', 'best');
 
-% Adjust axes to see the flattening effect clearly
 set(gca, 'FontSize', 12, 'TickDir', 'in');
 box on;
 hold off;

@@ -9,6 +9,7 @@ L = sqrt(2) ;       % semi span
 LAM = 45 ;          % sweep angle of half chord [degrees]
 S = 2*sqrt(2) ;     % use trapez rule for area if linear sweep
 e = 0.25 ;          % elastic axis loc. rel. quarter chord
+% AR = ((L*2)^2)/S
 
 % inflow conditions
 Vinf = 50 ;             % airspeed m/s
